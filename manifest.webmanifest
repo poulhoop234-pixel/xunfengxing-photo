@@ -1,0 +1,13 @@
+{
+  "name": "迅锋星拍照用",
+  "short_name": "迅锋星",
+  "start_url": "/?v=28",
+  "display": "standalone",
+  "background_color": "#EFF4FB",
+  "theme_color": "#246BFE",
+  "description": "现场拍照归档、微信汇报、历史补录、月底导出。",
+  "icons": [
+    {"src":"icons/icon-192.png", "sizes":"192x192", "type":"image/png"},
+    {"src":"icons/icon-512.png", "sizes":"512x512", "type":"image/png"}
+  ]
+}

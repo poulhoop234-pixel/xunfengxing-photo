@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#246BFE" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="迅锋星拍照用" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>迅锋星拍照用</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css?v=28" />
+</head>
+<body>
+  <div id="splashScreen" class="splashScreen">
+    <div class="splashGlow one"></div>
+    <div class="splashGlow two"></div>
+    <div class="splashContent">
+      <div class="splashBadge">迅锋星拍照用 · 稳定版</div>
+      <div class="splashMainText">打造专业团队</div>
+      <div class="splashBattleText">干翻其他友商</div>
+      <div class="splashSubText">现场留痕 · 快速汇报 · 月底出表</div>
+      <div class="splashBar"><span></span></div>
+    </div>
+  </div>
+
+  <div id="nameGate" class="gate hidden">
+    <div class="gateCard">
+      <div class="logoMark">📷</div>
+      <h1>迅锋星拍照用</h1>
+      <p>先写名字，后面用起来不乱套。</p>
+      <input id="gateName" type="text" placeholder="请输入你的名字" autocomplete="name" />
+      <button id="saveGateName" class="primary">进入系统</button>
+      <small>开发者：昆明彭于晏</small>
+    </div>
+  </div>
+
+  <div id="alarmOverlay" class="alarmOverlay hidden">
+    <div class="alarmBox">
+      <div class="alarmIcon">⏰</div>
+      <h2 id="alarmTitle">提醒</h2>
+      <p id="alarmText">记得拍照打卡，别让照片比工资先跑路。</p>
+      <button id="stopAlarm" class="danger">停止报警</button>
+    </div>
+  </div>
+
+  <div id="reportModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modalCard">
+      <div class="modalHead">
+        <div>
+          <div class="cardTag">微信汇报</div>
+          <h2>汇报文本</h2>
+        </div>
+        <button id="closeReportModal" class="iconBtn" aria-label="关闭">×</button>
+      </div>
+      <textarea id="reportTextArea" rows="12"></textarea>
+      <div class="buttonRow twoButtons">
+        <button id="copyReportText" class="primary">复制文本</button>
+        <button id="openWechatOnly" class="secondary">打开微信</button>
+      </div>
+      <div class="tinyTip">复制不动就长按上面文本框手动复制，稳比花哨重要。</div>
+      <div class="moduleDev">开发者：昆明彭于晏</div>
+    </div>
+  </div>
+
+  <div id="exportModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modalCard wideModal">
+      <div class="modalHead">
+        <div>
+          <div class="cardTag">导出确认</div>
+          <h2 id="exportPreviewTitle">预览表格</h2>
+        </div>
+        <button id="closeExportModal" class="iconBtn" aria-label="关闭">×</button>
+      </div>
+      <div id="exportPreviewBox" class="previewTableBox"></div>
+      <div class="buttonRow twoButtons">
+        <button id="confirmExport" class="primary">确认下载</button>
+        <button id="cancelExport" class="secondary">返回修改</button>
+      </div>
+      <div class="moduleDev">开发者：昆明彭于晏</div>
+    </div>
+  </div>
+
+  <header class="appHeader">
+    <div class="brandCard">
+      <div class="appIcon">📷</div>
+      <div class="brandText">
+        <div class="eyebrow">现场兄弟专用</div>
+        <h1>迅锋星拍照用</h1>
+        <p id="subtitle">今日填报 · 历史补录 · 月底出表</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <nav class="tabs">
+      <button class="tab active" data-tab="today">今日归档</button>
+      <button class="tab" data-tab="backfill">历史补录</button>
+      <button class="tab" data-tab="history">历史记录</button>
+      <button class="tab" data-tab="files">文件柜</button>
+      <button class="tab" data-tab="export">月底导出</button>
+      <button class="tab" data-tab="settings">设置</button>
+    </nav>
+
+    <section id="today" class="panel active">
+      <div class="quickPanel">
+        <div>
+          <div class="quickKicker">今日归档</div>
+          <div class="quickTitle">先填活，再传照片，月底少受罪。</div>
+        </div>
+        <div class="quickActions">
+          <button id="openCameraTop" class="primary">打开水印相机</button>
+          <button id="copyLastContent" class="secondary bright">套用上次内容</button>
+          <button id="clearTodayTop" class="danger light">清除今日填写</button>
+        </div>
+        <div class="moduleDev">开发者：昆明彭于晏</div>
+      </div>
+
+      <details class="card foldCard" open>
+        <summary class="foldSummary"><span><b class="cardTag">项目</b><strong>项目信息</strong></span><em>展开/收起</em></summary>
+        <div class="foldBody">
+          <div class="grid two">
+            <label>项目名称<input id="projectName" type="text" placeholder="例如：曲靖项目" /></label>
+            <label>省份/城市<input id="city" type="text" placeholder="例如：云南省曲靖" /></label>
+            <label>日期<input id="workDate" type="date" /></label>
+            <label>服务人员<input id="servicePerson" type="text" placeholder="例如：王亮" /></label>
+            <label>上班时间<span class="hint">上班了，照片别漏。</span><input id="startTime" type="time" value="08:30" /></label>
+            <label>工作进行中<span class="hint">中途补一张，免得像没干。</span><input id="middleTime" type="time" value="14:00" /></label>
+            <label>下班时间<span class="hint">收工前拍一下，别空手回去。</span><input id="endTime" type="time" value="18:00" /></label>
+          </div>
+          <div class="buttonRow oneButton"><button id="saveProject" class="secondary">保存项目和提醒</button></div>
+          <div class="moduleDev">开发者：昆明彭于晏</div>
+        </div>
+      </details>
+
+      <details class="card foldCard" open>
+        <summary class="foldSummary"><span><b class="cardTag">汇报</b><strong>工作内容</strong></span><em>展开/收起</em></summary>
+        <div class="foldBody">
+          <label>工作内容<textarea id="workContent" rows="3" placeholder="今天实际干了啥"></textarea></label>
+          <label>待处理问题<textarea id="pendingIssues" rows="2" placeholder="还有啥坑没填"></textarea></label>
+          <label>次日计划<textarea id="nextPlan" rows="2" placeholder="明天接着干啥"></textarea></label>
+          <div class="buttonRow twoButtons">
+            <button id="copyWechat" class="primary">生成并复制汇报</button>
+            <button id="clearToday" class="danger light">清除今日填写</button>
+          </div>
+          <div class="moduleDev">开发者：昆明彭于晏</div>
+        </div>
+      </details>
+
+      <details class="card foldCard" open>
+        <summary class="foldSummary"><span><b class="cardTag">拍照</b><strong>拍照说明和照片</strong></span><em>展开/收起</em></summary>
+        <div class="foldBody">
+          <div class="projectMediaGrid">
+            <div class="notesSide">
+              <div class="miniTopLine">
+                <span>本项目拍照要求</span>
+                <select id="presetSelect" class="pillSelect miniSelect">
+                  <option value="">套用模板</option>
+                  <option value="replace">设备整机更换</option>
+                  <option value="repair">技改/维修</option>
+                  <option value="batch">批量更换/巡检</option>
+                  <option value="install">安装施工/搬运吊装</option>
+                  <option value="day">按天服务</option>
+                </select>
+              </div>
+              <textarea id="photoNotes" rows="4" placeholder="这个项目要怎么拍，直接写这里。比如：入场、过程、离场都拍。"></textarea>
+              <button id="savePhotoNotes" class="secondary fullBtn">保存拍照要求</button>
+            </div>
+            <div class="uploadSide">
+              <div class="uploadBlock">
+                <label>今日水印照片<input id="watermarkPhotos" type="file" accept="image/*" multiple /></label>
+                <div id="photoPreview" class="preview"></div>
+              </div>
+              <div class="uploadBlock">
+                <label>项目服务清单照片<input id="checklistPhotos" type="file" accept="image/*" multiple /></label>
+                <div id="checklistPreview" class="preview"></div>
+              </div>
+            </div>
+          </div>
+          <div class="buttonRow twoButtons">
+            <button id="openCamera" class="primary">打开今日水印相机</button>
+            <button id="saveArchive" class="secondary">保存归档</button>
+          </div>
+          <div class="moduleDev">开发者：昆明彭于晏</div>
+        </div>
+      </details>
+    </section>
+
+    <section id="backfill" class="panel">
+      <div class="card">
+        <div class="cardHeader"><div><div class="cardTag">补以前</div><h2>粘贴识别补录</h2></div></div>
+        <textarea id="pasteText" rows="10" placeholder="把以前微信群日报粘这里，软件会识别：项目名称、省份/城市、日期、工作内容、待处理问题、次日计划。"></textarea>
+        <div class="buttonRow twoButtons">
+          <button id="parsePaste" class="primary">识别并加入补录列表</button>
+          <button id="clearParsed" class="secondary">清空补录列表</button>
+        </div>
+        <div id="parsedList" class="parsedList empty">还没识别内容</div>
+        <div class="moduleDev">开发者：昆明彭于晏</div>
+      </div>
+
+      <div class="card">
+        <div class="cardHeader"><div><div class="cardTag">手动补</div><h2>手动补录</h2></div></div>
+        <div class="grid two">
+          <label>项目名称<input id="bfProjectName" type="text" placeholder="例如：曲靖项目" /></label>
+          <label>省份/城市<input id="bfCity" type="text" placeholder="例如：云南省曲靖" /></label>
+          <label>日期<input id="bfWorkDate" type="date" /></label>
+        </div>
+        <label>工作内容<textarea id="bfWorkContent" rows="3" placeholder="补这天干了啥"></textarea></label>
+        <label>待处理问题<textarea id="bfPendingIssues" rows="2" placeholder="这天剩啥问题"></textarea></label>
+        <label>次日计划<textarea id="bfNextPlan" rows="2" placeholder="第二天计划"></textarea></label>
+        <div class="uploadBlock softBlock">
+          <label>补录照片<input id="bfPhotos" type="file" accept="image/*" multiple /></label>
+          <div id="bfPhotoPreview" class="preview"></div>
+        </div>
+        <div class="buttonRow oneButton"><button id="saveBackfill" class="secondary">保存补录</button></div>
+        <div class="moduleDev">开发者：昆明彭于晏</div>
+      </div>
+    </section>
+
+    <section id="history" class="panel">
+      <div class="card">
+        <div class="cardHeader"><div><div class="cardTag">翻旧账</div><h2>历史记录</h2></div></div>
+        <label class="searchLabel">搜索历史<input id="historySearch" type="search" placeholder="搜项目、日期、城市、内容都行" /></label>
+        <div id="historyList" class="list empty">暂无归档记录</div>
+        <div class="moduleDev">开发者：昆明彭于晏</div>
+      </div>
+    </section>
+
+    <section id="files" class="panel">
+      <div class="card">
+        <div class="cardHeader"><div><div class="cardTag">资料归纳</div><h2>现场文件柜</h2></div></div>
+        <div class="grid two">
+          <label>所属项目<input id="fileProject" type="text" placeholder="例如：曲靖项目" /></label>
+          <label>文件分类<select id="fileCategory"><option>故障排查手册</option><option>现场软件</option><option>项目资料</option><option>临时文件</option></select></label>
+          <label>备注<input id="fileRemark" type="text" placeholder="这文件是干嘛的" /></label>
+          <label>选择文件<input id="fileUpload" type="file" multiple /></label>
+        </div>
+        <div class="buttonRow oneButton"><button id="saveFiles" class="secondary">加入文件柜</button></div>
+        <hr />
+        <h2>固定工具 / 手册</h2>
+        <div class="toolGrid">
+          <a class="toolLink" href="tools/pcs_troubleshooting_manual.xlsx" download="PCS故障排查手册.xlsx">PCS 故障排查手册</a>
+          <a class="toolLink" href="tools/WebPassword.exe" download="WebPassword.exe">WebPassword</a>
+          <a class="toolLink" href="tools/site_tools_package.zip" download="现场所需软件包.zip">现场所需软件包</a>
+          <a class="toolLink" href="tools/python.exe" download="python.exe">python.exe</a>
+        </div>
+        <hr />
+        <label class="searchLabel">搜索文件<input id="fileSearch" type="search" placeholder="搜项目、分类、备注、文件名" /></label>
+        <div id="fileList" class="list empty">暂无文件</div>
+        <div class="moduleDev">开发者：昆明彭于晏</div>
+      </div>
+    </section>
+
+    <section id="export" class="panel">
+      <div class="card">
+        <div class="cardHeader"><div><div class="cardTag">月底出表</div><h2>导出表格</h2></div></div>
+        <div class="grid two">
+          <label>选择项目<select id="exportProject"><option value="">暂无项目</option></select></label>
+          <label>选择月份<input id="exportMonth" type="month" /></label>
+        </div>
+        <div class="buttonRow twoButtons">
+          <button id="exportCurrent" class="secondary">预览并导出当前项目</button>
+          <button id="exportAll" class="secondary">预览并导出全部项目</button>
+        </div>
+        <div class="moduleDev">开发者：昆明彭于晏</div>
+      </div>
+    </section>
+
+    <section id="settings" class="panel">
+      <div class="card">
+        <div class="cardHeader"><div><div class="cardTag">设置区</div><h2>设置</h2></div></div>
+        <label>你的姓名<input id="settingsName" type="text" placeholder="请输入姓名" /></label>
+        <div class="buttonRow twoButtons">
+          <button id="saveName" class="secondary">保存姓名</button>
+          <button id="installBtn" class="secondary">安装到桌面</button>
+        </div>
+        <hr />
+        <div class="buttonRow twoButtons">
+          <button id="enableAlarm" class="primary">开启闹钟并测试</button>
+          <button id="testAlarm" class="secondary">测试报警声</button>
+          <button id="testBgAlarm" class="secondary">10秒后试提醒</button>
+          <button id="clearAll" class="danger light">清空本机数据</button>
+        </div>
+        <div class="developer">开发者：昆明彭于晏</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js?v=28"></script>
+</body>
+</html>
