@@ -19,7 +19,6 @@ textarea{min-height:90px;resize:vertical}
 .uline{border-bottom:1px solid #333;background:transparent}
 .btn{position:sticky;bottom:0;background:#111;color:#fff;border:0;border-radius:8px;padding:12px 16px;margin:6px 4px;cursor:pointer}
 .sig-preview{border:1px dashed #888;height:95px;width:100%;display:block;background:#fff;touch-action:none;cursor:pointer}
-.sign-tip{font-size:13px;color:#666;margin-top:5px}
 .sign-meta{display:grid;grid-template-columns:110px 1fr 70px 1fr;gap:8px;align-items:center;margin-top:10px}
 .sign-meta .lbl{white-space:nowrap}
 .muted{color:#666;font-size:13px}
@@ -132,7 +131,7 @@ textarea{min-height:90px;resize:vertical}
       <td>服务工程师签字</td>
       <td colspan="3">
         <canvas class="sig-preview" data-title="服务工程师签字"></canvas>
-        <div class="sign-tip no">点签字框，全屏签名；写完点“确认签字”。</div>
+        
         <div class="sign-meta">
           <div class="lbl">联系方式</div><input>
           <div class="lbl date-label">日期</div><input class="date-input" type="date">
@@ -144,7 +143,7 @@ textarea{min-height:90px;resize:vertical}
       <td>客户签字</td>
       <td colspan="3">
         <canvas class="sig-preview" data-title="客户签字"></canvas>
-        <div class="sign-tip no">点签字框，全屏签名；写完点“确认签字”。</div>
+        
         <div class="sign-meta">
           <div class="lbl">联系方式</div><input>
           <div class="lbl date-label">日期</div><input class="date-input" type="date">
@@ -154,9 +153,9 @@ textarea{min-height:90px;resize:vertical}
   </table>
 
   <div class="no">
-    <p class="muted">签字逻辑已改成市面电子签名模式：点签字框全屏手写，确认后自动回填到表格。</p>
-    <button class="btn" onclick="window.print()">导出PDF</button>
-    <button class="btn" onclick="clearAllData()">清空重填</button>
+    
+    <button class="btn" onclick="window.print()">导出 PDF</button>
+    <button class="btn" onclick="clearAllData()">清空</button>
   </div>
 </div>
 
@@ -165,11 +164,11 @@ textarea{min-height:90px;resize:vertical}
     <button class="sign-cancel" type="button" onclick="closeSign(false)">取消</button>
     <div id="signTitle" class="sign-title">签字</div>
     <button class="sign-clear" type="button" onclick="clearBoard()">清除</button>
-    <button class="sign-ok" type="button" onclick="closeSign(true)">确认签字</button>
+    <button class="sign-ok" type="button" onclick="closeSign(true)">确认</button>
   </div>
   <div class="sign-board-wrap">
     <canvas id="signBoard" class="sign-board"></canvas>
-    <div class="sign-watermark">请在此处签名</div>
+    <div class="sign-watermark"></div>
   </div>
 </div>
 
