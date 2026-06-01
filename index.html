@@ -20,7 +20,8 @@ textarea{min-height:90px;resize:vertical}
 .btnbar{position:sticky;bottom:0;background:#fff;padding:8px 0;z-index:20}
 .btn{background:#111;color:#fff;border:0;border-radius:8px;padding:12px 16px;margin:6px 4px;cursor:pointer;font-size:16px}
 .btn:disabled{opacity:.5;cursor:not-allowed}
-.sig-preview{border:1px dashed #888;height:95px;width:100%;display:block;background:#fff;touch-action:none;cursor:pointer}
+.sig-preview{border:1px dashed #888;height:95px;width:100%;background:#fff;touch-action:none;cursor:pointer;box-sizing:border-box;overflow:hidden}
+.sig-preview svg{width:100%;height:100%;display:block}
 .sign-meta{display:grid;grid-template-columns:110px 1fr 70px 1fr;gap:8px;align-items:center;margin-top:10px}
 .sign-meta .lbl{white-space:nowrap}
 .nowrap{white-space:nowrap}
@@ -32,8 +33,9 @@ textarea{min-height:90px;resize:vertical}
 .sign-cancel{background:#e5e7eb;color:#111}
 .sign-clear{background:#f3f4f6;color:#111;border:1px solid #ddd!important}
 .sign-ok{background:#111;color:#fff}
-.sign-board-wrap{flex:1;position:relative;background:#fff;overflow:hidden}
-.sign-board{width:100%;height:100%;display:block;background:#fff;touch-action:none}
+.sign-board-wrap{flex:1;position:relative;background:#fff;overflow:hidden;touch-action:none}
+#signSvg{width:100%;height:100%;display:block;background:#fff;touch-action:none}
+.sign-path{fill:none;stroke:#111;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
 .loading{position:fixed;inset:0;background:rgba(255,255,255,.78);z-index:999999;display:none;align-items:center;justify-content:center;font-size:18px;font-weight:700}
 .loading.show{display:flex}
 @media (max-width:768px){
@@ -47,6 +49,7 @@ textarea{min-height:90px;resize:vertical}
   .sign-meta .date-label{grid-column:1/2}
   .sign-meta .date-input{grid-column:2/3}
   .btn{font-size:15px;padding:11px 14px}
+  .sign-top{height:54px}
 }
 @media print{
   .no,.sign-modal,.loading{display:none!important}
@@ -84,8 +87,20 @@ textarea{min-height:90px;resize:vertical}
     <tr><td colspan="4" class="sec">四、现场服务确认（客户填写）</td></tr>
     <tr><td>确认内容</td><td colspan="3">本人确认：上述服务人员于 <input class="inline-field uline" style="width:64px"> 年 <input class="inline-field uline" style="width:48px"> 月 <input class="inline-field uline" style="width:48px"> 日至 <input class="inline-field uline" style="width:64px"> 年 <input class="inline-field uline" style="width:48px"> 月 <input class="inline-field uline" style="width:48px"> 日期间，共计 <input class="inline-field uline" style="width:60px"> 人天，在本单位现场提供了真实有效的服务。</td></tr>
 
-    <tr><td>服务工程师签字</td><td colspan="3"><canvas class="sig-preview" data-title="服务工程师签字"></canvas><div class="sign-meta"><div class="lbl">联系方式</div><input><div class="lbl date-label">日期</div><input class="date-input" type="date"></div></td></tr>
-    <tr><td>客户签字</td><td colspan="3"><canvas class="sig-preview" data-title="客户签字"></canvas><div class="sign-meta"><div class="lbl">联系方式</div><input><div class="lbl date-label">日期</div><input class="date-input" type="date"></div></td></tr>
+    <tr>
+      <td>服务工程师签字</td>
+      <td colspan="3">
+        <div class="sig-preview" data-title="服务工程师签字" data-index="0"></div>
+        <div class="sign-meta"><div class="lbl">联系方式</div><input><div class="lbl date-label">日期</div><input class="date-input" type="date"></div>
+      </td>
+    </tr>
+    <tr>
+      <td>客户签字</td>
+      <td colspan="3">
+        <div class="sig-preview" data-title="客户签字" data-index="1"></div>
+        <div class="sign-meta"><div class="lbl">联系方式</div><input><div class="lbl date-label">日期</div><input class="date-input" type="date"></div>
+      </td>
+    </tr>
   </table>
 
   <div class="btnbar no">
@@ -100,10 +115,11 @@ textarea{min-height:90px;resize:vertical}
     <button class="sign-cancel" type="button" onclick="closeSign(false)">取消</button>
     <div id="signTitle" class="sign-title">签字</div>
     <button class="sign-clear" type="button" onclick="clearBoard()">清除</button>
+    <button class="sign-clear" type="button" onclick="manualRotate()">旋转</button>
     <button class="sign-ok" type="button" onclick="closeSign(true)">确认</button>
   </div>
   <div class="sign-board-wrap">
-    <canvas id="signBoard" class="sign-board"></canvas>
+    <svg id="signSvg" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"></svg>
   </div>
 </div>
 
@@ -113,6 +129,7 @@ textarea{min-height:90px;resize:vertical}
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <script>
+const SVG_NS='http://www.w3.org/2000/svg';
 const fields=document.querySelectorAll('input,textarea');
 fields.forEach((x,i)=>{
   const k='f'+i;
@@ -136,127 +153,172 @@ function calc(){
 }
 s.onchange=e.onchange=calc;
 
-function fitCanvas(c){
-  const ratio=Math.max(window.devicePixelRatio||1,1);
-  const rect=c.getBoundingClientRect();
-  c.width=Math.max(1,Math.floor(rect.width*ratio));
-  c.height=Math.max(1,Math.floor(rect.height*ratio));
-  const ctx=c.getContext('2d');
-  ctx.setTransform(ratio,0,0,ratio,0,0);
-  ctx.lineWidth=2.4;
-  ctx.lineCap='round';
-  ctx.lineJoin='round';
-  ctx.strokeStyle='#111';
+function newSvg(viewBox='0 0 1000 350'){
+  const svg=document.createElementNS(SVG_NS,'svg');
+  svg.setAttribute('xmlns',SVG_NS);
+  svg.setAttribute('viewBox',viewBox);
+  svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+  svg.style.width='100%';
+  svg.style.height='100%';
+  svg.style.display='block';
+  return svg;
 }
-
-function drawImageContain(ctx,img,boxW,boxH){
-  const ratio=Math.min(boxW/img.width, boxH/img.height);
-  const w=img.width*ratio;
-  const h=img.height*ratio;
-  const x=(boxW-w)/2;
-  const y=(boxH-h)/2;
-  ctx.drawImage(img,x,y,w,h);
+function renderPreview(el,idx){
+  el.innerHTML='';
+  const data=localStorage['sigSvg'+idx] || '';
+  const svg=newSvg('0 0 1000 350');
+  if(data) svg.innerHTML=data;
+  el.appendChild(svg);
 }
-function copyCanvas(src,dst){
-  fitCanvas(dst);
-  const dctx=dst.getContext('2d');
-  const dw=dst.getBoundingClientRect().width, dh=dst.getBoundingClientRect().height;
-  dctx.clearRect(0,0,dw,dh);
-  if(src) drawImageContain(dctx,src,dw,dh);
-}
-
-const previews=[...document.querySelectorAll('.sig-preview')];
-previews.forEach((c,i)=>{
-  fitCanvas(c);
-  const saved=localStorage['sig'+i];
-  if(saved){
-    const img=new Image();
-    img.onload=()=>drawImageContain(c.getContext('2d'),img,c.getBoundingClientRect().width,c.getBoundingClientRect().height);
-    img.src=saved;
-  }
-  c.addEventListener('click',()=>openSign(c,i));
+document.querySelectorAll('.sig-preview').forEach(el=>{
+  const idx=el.dataset.index;
+  renderPreview(el,idx);
+  el.addEventListener('click',()=>openSign(el,idx));
 });
 
-let activePreview=null,activeIndex=0,draw=false;
+let activeEl=null,activeIndex=0,drawing=false,currentPath=null,currentD='';
 const modal=document.getElementById('signModal');
-const board=document.getElementById('signBoard');
-const bctx=board.getContext('2d');
+const signSvg=document.getElementById('signSvg');
 
-function openSign(preview,index){
-  activePreview=preview;
-  activeIndex=index;
-  document.getElementById('signTitle').textContent=preview.dataset.title||'签字';
+function setBoardViewBox(){
+  const r=signSvg.getBoundingClientRect();
+  signSvg.setAttribute('viewBox',`0 0 ${Math.max(1,Math.round(r.width))} ${Math.max(1,Math.round(r.height))}`);
+}
+
+function openSign(el,idx){
+  activeEl=el;
+  activeIndex=idx;
+  document.getElementById('signTitle').textContent=el.dataset.title||'签字';
   modal.classList.add('show');
   document.body.style.overflow='hidden';
+  signSvg.innerHTML='';
   setTimeout(()=>{
-    fitCanvas(board);
-    bctx.clearRect(0,0,board.getBoundingClientRect().width,board.getBoundingClientRect().height);
-    const saved=localStorage['sig'+index];
-    if(saved){
-      const img=new Image();
-      img.onload=()=>drawImageContain(bctx,img,board.getBoundingClientRect().width,board.getBoundingClientRect().height);
-      img.src=saved;
-    }
-  },120);
+    setBoardViewBox();
+    const old=localStorage['sigRaw'+idx] || '';
+    if(old) signSvg.innerHTML=old;
+  },80);
+}
+function manualRotate(){
+  const raw=signSvg.innerHTML;
+  if(!raw) return;
+  let box;
+  try{ box=signSvg.getBBox(); }catch(e){ box=null; }
+  if(!box || !box.width || !box.height) return;
+
+  const vb=signSvg.viewBox.baseVal;
+  const w=vb.width || signSvg.getBoundingClientRect().width;
+  const h=vb.height || signSvg.getBoundingClientRect().height;
+
+  const g=document.createElementNS(SVG_NS,'g');
+  // 围绕当前签字板中心旋转 90°，用于个别手机方向判断不准时手动纠正。
+  g.setAttribute('transform',`translate(${w/2} ${h/2}) rotate(90) translate(${-w/2} ${-h/2})`);
+  g.innerHTML=raw;
+  signSvg.innerHTML='';
+  signSvg.appendChild(g);
 }
 
 function closeSign(save){
-  if(save && activePreview){
-    copyCanvas(board,activePreview);
-    localStorage['sig'+activeIndex]=activePreview.toDataURL('image/png');
+  if(save && activeEl){
+    const raw=signSvg.innerHTML;
+    localStorage['sigRaw'+activeIndex]=raw;
+    localStorage['sigSvg'+activeIndex]=normalizeSvgForPreview(signSvg);
+    renderPreview(activeEl,activeIndex);
   }
   modal.classList.remove('show');
   document.body.style.overflow='';
 }
-
 function clearBoard(){
-  bctx.clearRect(0,0,board.getBoundingClientRect().width,board.getBoundingClientRect().height);
+  signSvg.innerHTML='';
 }
+function normalizeSvgForPreview(svg){
+  const raw=svg.innerHTML;
+  if(!raw) return '';
 
-function getPoint(e){
-  const rect=board.getBoundingClientRect();
-  const t=e.touches?e.touches[0]:e;
-  return [t.clientX-rect.left,t.clientY-rect.top];
+  let box;
+  try{
+    box=svg.getBBox();
+  }catch(e){
+    box=null;
+  }
+
+  if(!box || !box.width || !box.height){
+    const vb=svg.viewBox.baseVal;
+    if(!vb || !vb.width || !vb.height) return raw;
+    box={x:0,y:0,width:vb.width,height:vb.height};
+  }
+
+  const targetW=1000;
+  const targetH=350;
+  const padding=36;
+
+  const g=document.createElementNS(SVG_NS,'g');
+
+  // 如果签名整体是竖向的，就自动旋转成横向后再塞回表格签字框。
+  const needRotate = box.height > box.width * 1.15;
+
+  let contentW = needRotate ? box.height : box.width;
+  let contentH = needRotate ? box.width : box.height;
+  const scale=Math.min((targetW-padding*2)/contentW,(targetH-padding*2)/contentH);
+
+  const tx=(targetW-contentW*scale)/2;
+  const ty=(targetH-contentH*scale)/2;
+
+  if(needRotate){
+    // 先把原签名左上角归零，再顺时针旋转 90°，最后居中缩放进签字框。
+    g.setAttribute(
+      'transform',
+      `translate(${tx} ${ty}) scale(${scale}) rotate(90) translate(${-box.x} ${-box.y-box.height})`
+    );
+  }else{
+    g.setAttribute(
+      'transform',
+      `translate(${tx} ${ty}) scale(${scale}) translate(${-box.x} ${-box.y})`
+    );
+  }
+
+  g.innerHTML=raw;
+  return g.outerHTML;
 }
-
-board.addEventListener('pointerdown',e=>{
+function point(e){
+  const r=signSvg.getBoundingClientRect();
+  return [e.clientX-r.left,e.clientY-r.top];
+}
+function addPath(x,y){
+  currentPath=document.createElementNS(SVG_NS,'path');
+  currentPath.setAttribute('class','sign-path');
+  currentD=`M ${x.toFixed(1)} ${y.toFixed(1)}`;
+  currentPath.setAttribute('d',currentD);
+  signSvg.appendChild(currentPath);
+}
+function movePath(x,y){
+  if(!currentPath)return;
+  currentD+=` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+  currentPath.setAttribute('d',currentD);
+}
+signSvg.addEventListener('pointerdown',e=>{
   e.preventDefault();
-  board.setPointerCapture && board.setPointerCapture(e.pointerId);
-  draw=true;
-  bctx.beginPath();
-  bctx.moveTo(...getPoint(e));
-});
-board.addEventListener('pointermove',e=>{
-  if(!draw)return;
+  signSvg.setPointerCapture && signSvg.setPointerCapture(e.pointerId);
+  drawing=true;
+  const [x,y]=point(e);
+  addPath(x,y);
+},{passive:false});
+signSvg.addEventListener('pointermove',e=>{
+  if(!drawing)return;
   e.preventDefault();
-  bctx.lineTo(...getPoint(e));
-  bctx.stroke();
-});
-board.addEventListener('pointerup',e=>{
-  draw=false;
-  board.releasePointerCapture && board.releasePointerCapture(e.pointerId);
-});
-board.addEventListener('pointercancel',()=>draw=false);
-board.addEventListener('pointerleave',()=>draw=false);
+  const [x,y]=point(e);
+  movePath(x,y);
+},{passive:false});
+signSvg.addEventListener('pointerup',e=>{
+  drawing=false;
+  signSvg.releasePointerCapture && signSvg.releasePointerCapture(e.pointerId);
+},{passive:false});
+signSvg.addEventListener('pointercancel',()=>drawing=false,{passive:false});
 
 window.addEventListener('resize',()=>{
-  previews.forEach((c,i)=>{
-    const saved=localStorage['sig'+i];
-    fitCanvas(c);
-    if(saved){
-      const img=new Image();
-      img.onload=()=>drawImageContain(c.getContext('2d'),img,c.getBoundingClientRect().width,c.getBoundingClientRect().height);
-      img.src=saved;
-    }
-  });
   if(modal.classList.contains('show')){
-      const temp=board.toDataURL('image/png');
-    setTimeout(()=>{
-      fitCanvas(board);
-      const img=new Image();
-      img.onload=()=>drawImageContain(bctx,img,board.getBoundingClientRect().width,board.getBoundingClientRect().height);
-      img.src=temp;
-    },80);
+    const old=signSvg.innerHTML;
+    setBoardViewBox();
+    signSvg.innerHTML=old;
   }
 });
 
@@ -274,7 +336,7 @@ async function makeCanvas(){
   const node=document.getElementById('serviceForm');
   const btnbar=document.querySelector('.btnbar');
   btnbar.style.display='none';
-  await new Promise(r=>setTimeout(r,120));
+  await new Promise(r=>setTimeout(r,160));
   const canvas=await html2canvas(node,{scale:2,useCORS:true,backgroundColor:'#ffffff',scrollX:0,scrollY:0});
   btnbar.style.display='';
   return canvas;
@@ -305,17 +367,17 @@ async function savePdf(){
     const pdf=new jsPDF('p','mm','a4');
     const pageW=210, pageH=297;
     const margin=8;
+    const usableH=pageH-margin*2;
     const imgW=pageW-margin*2;
     const imgH=canvas.height*imgW/canvas.width;
-    let heightLeft=imgH;
-    let position=margin;
-    pdf.addImage(imgData,'JPEG',margin,position,imgW,imgH);
-    heightLeft-=pageH-margin*2;
-    while(heightLeft>0){
+    let y=margin;
+    pdf.addImage(imgData,'JPEG',margin,y,imgW,imgH);
+    let remaining=imgH-usableH;
+    while(remaining>0){
       pdf.addPage();
-      position=margin-heightLeft-(imgH-heightLeft);
-      pdf.addImage(imgData,'JPEG',margin,position,imgW,imgH);
-      heightLeft-=pageH-margin*2;
+      y=margin-(imgH-remaining);
+      pdf.addImage(imgData,'JPEG',margin,y,imgW,imgH);
+      remaining-=usableH;
     }
     pdf.save(filename('pdf'));
   }catch(e){
