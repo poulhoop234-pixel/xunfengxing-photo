@@ -17,23 +17,25 @@ textarea{min-height:90px;resize:vertical}
 .chk{width:auto;transform:scale(1.1);margin-right:4px}
 .inline-field{display:inline-block;vertical-align:middle}
 .uline{border-bottom:1px solid #333;background:transparent}
-.btn{position:sticky;bottom:0;background:#111;color:#fff;border:0;border-radius:8px;padding:12px 16px;margin:6px 4px;cursor:pointer}
+.btnbar{position:sticky;bottom:0;background:#fff;padding:8px 0;z-index:20}
+.btn{background:#111;color:#fff;border:0;border-radius:8px;padding:12px 16px;margin:6px 4px;cursor:pointer;font-size:16px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
 .sig-preview{border:1px dashed #888;height:95px;width:100%;display:block;background:#fff;touch-action:none;cursor:pointer}
 .sign-meta{display:grid;grid-template-columns:110px 1fr 70px 1fr;gap:8px;align-items:center;margin-top:10px}
 .sign-meta .lbl{white-space:nowrap}
-.muted{color:#666;font-size:13px}
 .nowrap{white-space:nowrap}
-.sign-modal{position:fixed;inset:0;background:#fff;z-index:9999;display:none;flex-direction:column}
+.sign-modal{position:fixed;inset:0;background:#fff;z-index:99999;display:none;flex-direction:column}
 .sign-modal.show{display:flex}
-.sign-top{height:54px;display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #ddd;background:#fff;box-sizing:border-box}
-.sign-title{font-weight:700;flex:1;font-size:16px}
+.sign-top{height:56px;display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #ddd;background:#fff;box-sizing:border-box;z-index:2}
+.sign-title{font-weight:700;flex:1;font-size:16px;text-align:center}
 .sign-top button{border:0;border-radius:8px;padding:10px 14px;font-size:15px;cursor:pointer}
 .sign-cancel{background:#e5e7eb;color:#111}
 .sign-clear{background:#f3f4f6;color:#111;border:1px solid #ddd!important}
 .sign-ok{background:#111;color:#fff}
-.sign-board-wrap{flex:1;position:relative;background:#fafafa;overflow:hidden}
+.sign-board-wrap{flex:1;position:relative;background:#fff;overflow:hidden}
 .sign-board{width:100%;height:100%;display:block;background:#fff;touch-action:none}
-.sign-watermark{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#cfcfcf;font-size:26px;letter-spacing:4px;pointer-events:none;user-select:none}
+.loading{position:fixed;inset:0;background:rgba(255,255,255,.78);z-index:999999;display:none;align-items:center;justify-content:center;font-size:18px;font-weight:700}
+.loading.show{display:flex}
 @media (max-width:768px){
   .wrap{padding:8px}
   .head,.sub{font-size:16px}
@@ -44,12 +46,23 @@ textarea{min-height:90px;resize:vertical}
   .sign-meta{grid-template-columns:72px 1fr;gap:6px}
   .sign-meta .date-label{grid-column:1/2}
   .sign-meta .date-input{grid-column:2/3}
-  .sign-top{height:58px}
-  .sign-title{font-size:15px}
-  .sign-top button{padding:10px 12px}
+  .btn{font-size:15px;padding:11px 14px}
+}
+/* 手机竖屏时，签字板自动旋转成横屏书写区域 */
+@media (orientation:portrait) and (max-width:768px){
+  .sign-modal.rotate .sign-board-wrap{background:#fff}
+  .sign-modal.rotate .sign-board{
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:calc(100vh - 56px);
+    height:100vw;
+    transform:translate(-50%,-50%) rotate(90deg);
+    transform-origin:center center;
+  }
 }
 @media print{
-  .no,.sign-modal{display:none!important}
+  .no,.sign-modal,.loading{display:none!important}
   body{background:#fff}
   .wrap{max-width:none;padding:0}
   .sig-preview{border:0}
@@ -57,32 +70,17 @@ textarea{min-height:90px;resize:vertical}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div id="serviceForm" class="wrap">
   <div class="head">厦门科华数能科技有限公司</div>
   <div class="sub">光伏储能系统现场服务记录单</div>
 
   <table>
-    <tr>
-      <td style="width:15%">服务流程号</td>
-      <td style="width:40%"><input></td>
-      <td style="width:15%">填表日期</td>
-      <td style="width:30%"><input type="date"></td>
-    </tr>
-
+    <tr><td style="width:15%">服务流程号</td><td style="width:40%"><input></td><td style="width:15%">填表日期</td><td style="width:30%"><input type="date"></td></tr>
     <tr><td colspan="4" class="sec">一、基本信息</td></tr>
     <tr><td>项目名称</td><td colspan="3"><input></td></tr>
     <tr><td>最终客户</td><td><input></td><td>客户联系人</td><td><input></td></tr>
     <tr><td>客户地址</td><td><input></td><td>联系电话</td><td><input></td></tr>
-    <tr>
-      <td>服务内容</td>
-      <td colspan="3">
-        <label><input class="chk" type="checkbox">调试</label>
-        <label><input class="chk" type="checkbox">维修</label>
-        <label><input class="chk" type="checkbox">巡检</label>
-        <label><input class="chk" type="checkbox">升级</label>
-        <span class="nowrap">其他：</span><input class="inline-field uline" style="width:180px">
-      </td>
-    </tr>
+    <tr><td>服务内容</td><td colspan="3"><label><input class="chk" type="checkbox">调试</label> <label><input class="chk" type="checkbox">维修</label> <label><input class="chk" type="checkbox">巡检</label> <label><input class="chk" type="checkbox">升级</label> <span class="nowrap">其他：</span><input class="inline-field uline" style="width:180px"></td></tr>
     <tr><td>服务工程师</td><td><input></td><td>工程师联系电话</td><td><input></td></tr>
     <tr><td>服务开始日期</td><td><input type="date" id="s"></td><td>服务结束日期</td><td><input type="date" id="e"></td></tr>
     <tr><td>共计服务天数</td><td colspan="3"><input id="days" placeholder="自动计算"></td></tr>
@@ -90,72 +88,23 @@ textarea{min-height:90px;resize:vertical}
     <tr><td colspan="4" class="sec">二、服务内容及处理结果（服务工程师填写）</td></tr>
     <tr><td>问题描述</td><td colspan="3"><textarea></textarea></td></tr>
     <tr><td>处理过程</td><td colspan="3"><textarea></textarea></td></tr>
-    <tr>
-      <td>处理结果</td>
-      <td colspan="3">
-        <label><input class="chk" type="checkbox">已完成，系统运行正常</label>
-        <label><input class="chk" type="checkbox">需后续跟进</label>
-        <span class="nowrap">说明：</span><input class="inline-field uline" style="width:220px"><br>
-        其他：<input class="uline">
-      </td>
-    </tr>
+    <tr><td>处理结果</td><td colspan="3"><label><input class="chk" type="checkbox">已完成，系统运行正常</label> <label><input class="chk" type="checkbox">需后续跟进</label> <span class="nowrap">说明：</span><input class="inline-field uline" style="width:220px"><br>其他：<input class="uline"></td></tr>
 
     <tr><td colspan="4" class="sec">三、客户评价</td></tr>
-    <tr>
-      <td>满意度评价</td>
-      <td colspan="3">
-        <label><input class="chk" type="checkbox">非常满意</label>
-        <label><input class="chk" type="checkbox">满意</label>
-        <label><input class="chk" type="checkbox">一般</label>
-        <label><input class="chk" type="checkbox">不满意</label>
-      </td>
-    </tr>
+    <tr><td>满意度评价</td><td colspan="3"><label><input class="chk" type="checkbox">非常满意</label> <label><input class="chk" type="checkbox">满意</label> <label><input class="chk" type="checkbox">一般</label> <label><input class="chk" type="checkbox">不满意</label></td></tr>
     <tr><td>意见 / 建议</td><td colspan="3"><textarea></textarea></td></tr>
 
     <tr><td colspan="4" class="sec">四、现场服务确认（客户填写）</td></tr>
-    <tr>
-      <td>确认内容</td>
-      <td colspan="3">
-        本人确认：上述服务人员于
-        <input class="inline-field uline" style="width:64px"> 年
-        <input class="inline-field uline" style="width:48px"> 月
-        <input class="inline-field uline" style="width:48px"> 日至
-        <input class="inline-field uline" style="width:64px"> 年
-        <input class="inline-field uline" style="width:48px"> 月
-        <input class="inline-field uline" style="width:48px"> 日期间，共计
-        <input class="inline-field uline" style="width:60px"> 人天，在本单位现场提供了真实有效的服务。
-      </td>
-    </tr>
+    <tr><td>确认内容</td><td colspan="3">本人确认：上述服务人员于 <input class="inline-field uline" style="width:64px"> 年 <input class="inline-field uline" style="width:48px"> 月 <input class="inline-field uline" style="width:48px"> 日至 <input class="inline-field uline" style="width:64px"> 年 <input class="inline-field uline" style="width:48px"> 月 <input class="inline-field uline" style="width:48px"> 日期间，共计 <input class="inline-field uline" style="width:60px"> 人天，在本单位现场提供了真实有效的服务。</td></tr>
 
-    <tr>
-      <td>服务工程师签字</td>
-      <td colspan="3">
-        <canvas class="sig-preview" data-title="服务工程师签字"></canvas>
-        
-        <div class="sign-meta">
-          <div class="lbl">联系方式</div><input>
-          <div class="lbl date-label">日期</div><input class="date-input" type="date">
-        </div>
-      </td>
-    </tr>
-
-    <tr>
-      <td>客户签字</td>
-      <td colspan="3">
-        <canvas class="sig-preview" data-title="客户签字"></canvas>
-        
-        <div class="sign-meta">
-          <div class="lbl">联系方式</div><input>
-          <div class="lbl date-label">日期</div><input class="date-input" type="date">
-        </div>
-      </td>
-    </tr>
+    <tr><td>服务工程师签字</td><td colspan="3"><canvas class="sig-preview" data-title="服务工程师签字"></canvas><div class="sign-meta"><div class="lbl">联系方式</div><input><div class="lbl date-label">日期</div><input class="date-input" type="date"></div></td></tr>
+    <tr><td>客户签字</td><td colspan="3"><canvas class="sig-preview" data-title="客户签字"></canvas><div class="sign-meta"><div class="lbl">联系方式</div><input><div class="lbl date-label">日期</div><input class="date-input" type="date"></div></td></tr>
   </table>
 
-  <div class="no">
-    
-    <button class="btn" onclick="window.print()">导出 PDF</button>
-    <button class="btn" onclick="clearAllData()">清空</button>
+  <div class="btnbar no">
+    <button class="btn" type="button" id="pdfBtn">生成 PDF</button>
+    <button class="btn" type="button" id="imgBtn">保存图片</button>
+    <button class="btn" type="button" onclick="clearAllData()">清空</button>
   </div>
 </div>
 
@@ -168,9 +117,13 @@ textarea{min-height:90px;resize:vertical}
   </div>
   <div class="sign-board-wrap">
     <canvas id="signBoard" class="sign-board"></canvas>
-    <div class="sign-watermark"></div>
   </div>
 </div>
+
+<div id="loading" class="loading no">正在生成...</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <script>
 const fields=document.querySelectorAll('input,textarea');
@@ -214,9 +167,7 @@ function copyCanvas(src,dst){
   const dctx=dst.getContext('2d');
   const dw=dst.getBoundingClientRect().width, dh=dst.getBoundingClientRect().height;
   dctx.clearRect(0,0,dw,dh);
-  if(src){
-    dctx.drawImage(src,0,0,dw,dh);
-  }
+  if(src) dctx.drawImage(src,0,0,dw,dh);
 }
 
 const previews=[...document.querySelectorAll('.sig-preview')];
@@ -236,12 +187,27 @@ const modal=document.getElementById('signModal');
 const board=document.getElementById('signBoard');
 const bctx=board.getContext('2d');
 
+async function tryLandscapeLock(){
+  try{
+    if(screen.orientation && screen.orientation.lock){
+      await screen.orientation.lock('landscape');
+    }
+  }catch(e){}
+}
+function tryUnlock(){
+  try{
+    if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
+  }catch(e){}
+}
+
 function openSign(preview,index){
   activePreview=preview;
   activeIndex=index;
   document.getElementById('signTitle').textContent=preview.dataset.title||'签字';
   modal.classList.add('show');
+  if(window.innerWidth < window.innerHeight) modal.classList.add('rotate'); else modal.classList.remove('rotate');
   document.body.style.overflow='hidden';
+  tryLandscapeLock();
   setTimeout(()=>{
     fitCanvas(board);
     bctx.clearRect(0,0,board.getBoundingClientRect().width,board.getBoundingClientRect().height);
@@ -251,7 +217,7 @@ function openSign(preview,index){
       img.onload=()=>bctx.drawImage(img,0,0,board.getBoundingClientRect().width,board.getBoundingClientRect().height);
       img.src=saved;
     }
-  },50);
+  },120);
 }
 
 function closeSign(save){
@@ -261,28 +227,29 @@ function closeSign(save){
   }
   modal.classList.remove('show');
   document.body.style.overflow='';
+  tryUnlock();
 }
 
 function clearBoard(){
   bctx.clearRect(0,0,board.getBoundingClientRect().width,board.getBoundingClientRect().height);
 }
 
-function point(e){
-  const r=board.getBoundingClientRect();
+function getPoint(e){
+  const rect=board.getBoundingClientRect();
   const t=e.touches?e.touches[0]:e;
-  return [t.clientX-r.left,t.clientY-r.top];
+  return [t.clientX-rect.left,t.clientY-rect.top];
 }
 
 board.addEventListener('pointerdown',e=>{
   e.preventDefault();
   draw=true;
   bctx.beginPath();
-  bctx.moveTo(...point(e));
+  bctx.moveTo(...getPoint(e));
 });
 board.addEventListener('pointermove',e=>{
   if(!draw)return;
   e.preventDefault();
-  bctx.lineTo(...point(e));
+  bctx.lineTo(...getPoint(e));
   bctx.stroke();
 });
 board.addEventListener('pointerup',()=>draw=false);
@@ -299,13 +266,83 @@ window.addEventListener('resize',()=>{
     }
   });
   if(modal.classList.contains('show')){
+    if(window.innerWidth < window.innerHeight) modal.classList.add('rotate'); else modal.classList.remove('rotate');
     const temp=board.toDataURL('image/png');
-    fitCanvas(board);
-    const img=new Image();
-    img.onload=()=>bctx.drawImage(img,0,0,board.getBoundingClientRect().width,board.getBoundingClientRect().height);
-    img.src=temp;
+    setTimeout(()=>{
+      fitCanvas(board);
+      const img=new Image();
+      img.onload=()=>bctx.drawImage(img,0,0,board.getBoundingClientRect().width,board.getBoundingClientRect().height);
+      img.src=temp;
+    },80);
   }
 });
+
+function showLoading(show){
+  document.getElementById('loading').classList.toggle('show',!!show);
+}
+function filename(ext){
+  const d=new Date();
+  const p=n=>String(n).padStart(2,'0');
+  return '科华服务记录单_'+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'_'+p(d.getHours())+p(d.getMinutes())+'.'+ext;
+}
+async function makeCanvas(){
+  if(typeof html2canvas==='undefined') throw new Error('html2canvas not loaded');
+  document.activeElement && document.activeElement.blur();
+  const node=document.getElementById('serviceForm');
+  const btnbar=document.querySelector('.btnbar');
+  btnbar.style.display='none';
+  await new Promise(r=>setTimeout(r,120));
+  const canvas=await html2canvas(node,{scale:2,useCORS:true,backgroundColor:'#ffffff',scrollX:0,scrollY:0});
+  btnbar.style.display='';
+  return canvas;
+}
+async function saveImage(){
+  showLoading(true);
+  try{
+    const canvas=await makeCanvas();
+    const a=document.createElement('a');
+    a.href=canvas.toDataURL('image/png');
+    a.download=filename('png');
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }catch(e){
+    window.print();
+  }finally{
+    showLoading(false);
+  }
+}
+async function savePdf(){
+  showLoading(true);
+  try{
+    if(typeof window.jspdf==='undefined') throw new Error('jspdf not loaded');
+    const canvas=await makeCanvas();
+    const imgData=canvas.toDataURL('image/jpeg',0.96);
+    const { jsPDF }=window.jspdf;
+    const pdf=new jsPDF('p','mm','a4');
+    const pageW=210, pageH=297;
+    const margin=8;
+    const imgW=pageW-margin*2;
+    const imgH=canvas.height*imgW/canvas.width;
+    let heightLeft=imgH;
+    let position=margin;
+    pdf.addImage(imgData,'JPEG',margin,position,imgW,imgH);
+    heightLeft-=pageH-margin*2;
+    while(heightLeft>0){
+      pdf.addPage();
+      position=margin-heightLeft-(imgH-heightLeft);
+      pdf.addImage(imgData,'JPEG',margin,position,imgW,imgH);
+      heightLeft-=pageH-margin*2;
+    }
+    pdf.save(filename('pdf'));
+  }catch(e){
+    window.print();
+  }finally{
+    showLoading(false);
+  }
+}
+document.getElementById('pdfBtn').addEventListener('click',savePdf);
+document.getElementById('imgBtn').addEventListener('click',saveImage);
 
 function clearAllData(){
   localStorage.clear();
